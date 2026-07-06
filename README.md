@@ -5,8 +5,7 @@ auto-unseal. The plugin connects OpenBao to Securosys Primus HSM or CloudsHSM
 through the REST-based TSB interface and serves the `wrappers/securosyshsm`
 wrapper through `github.com/openbao/go-kms-wrapping/plugin/v2`.
 
-The integration lets OpenBao unlock its storage key with HSM-backed security
-and supports Securosys approval workflows for compliance-oriented deployments.
+The integration lets OpenBao unlock its storage key with HSM-backed security.
 
 ## Table of Contents
 
@@ -110,6 +109,9 @@ Auto-unseal is configured with two parts:
 The plugin must be registered in the server configuration because OpenBao has
 to load the seal before storage is unsealed.
 
+The HSM key configured with `key_label` must already exist on the Securosys HSM
+or CloudsHSM instance before OpenBao starts.
+
 Example:
 
 ```hcl
@@ -137,6 +139,13 @@ seal "securosys-hsm" {
   # For unauthenticated test endpoints, use:
   # auth = "NONE"
 
+  # Optional application key pair for metadata signatures.
+  # Provide privateKey and publicKey without PEM headers.
+  application_key_pair = "{\"privateKey\":\"replace-me_private_key_base64\",\"publicKey\":\"replace-me_public_key_base64\"}"
+
+  # Optional TSB API keys. Multiple keys can be provided per token type.
+  api_keys = "{\"KeyManagementToken\":[\"replace-me_key_management_token\"],\"KeyOperationToken\":[\"replace-me_key_operation_token\"],\"ServiceToken\":[\"replace-me_service_token\"]}"
+
   check_every      = 5
   approval_timeout = 600
 }
@@ -145,9 +154,12 @@ seal "securosys-hsm" {
 Supported optional values include:
 
 - `cert_path` and `key_path` for `CERT` authentication.
-- `policy`, `full_policy`, and `full_policy_file` for approval policy data.
-- `application_key_pair` for application-level signing keys.
-- `api_keys` for token-style Securosys operation authorization.
+- `application_key_pair` for metadata signatures. The value is a JSON string
+  with `privateKey` and `publicKey`, without PEM headers.
+- `api_keys` for TSB API-key authorization. The value is a JSON string. Common
+  token arrays are `KeyManagementToken`, `KeyOperationToken`, and
+  `ServiceToken`; approver flows can also use `ApproverToken` and
+  `ApproverKeyManagementToken`.
 
 Auto-unseal timeout settings:
 
@@ -188,8 +200,7 @@ The `initialize "bootstrap"` block in `config/selfinitialization.hcl` contains
 ordered `request` blocks. The current example:
 
 - Enables the `userpass` auth method.
-- Creates an `admin` ACL policy.
-- Creates an `admin` user with the `admin` policy.
+- Creates an `admin` user.
 
 Self-initialization runs only when the storage backend is not initialized yet.
 On later starts, OpenBao skips the `initialize` block.
@@ -237,6 +248,8 @@ seal "securosys-hsm" {
   bearer_token = "replace-me_bearer_token"
   # cert_path = "replace-me_cert_path"
   # key_path  = "replace-me_key_path"
+  # application_key_pair = "{\"privateKey\":\"replace-me_private_key_base64\",\"publicKey\":\"replace-me_public_key_base64\"}"
+  # api_keys = "{\"KeyManagementToken\":[\"replace-me_key_management_token\"],\"KeyOperationToken\":[\"replace-me_key_operation_token\"],\"ServiceToken\":[\"replace-me_service_token\"]}"
 
   check_every      = 5
   approval_timeout = 600
@@ -256,26 +269,12 @@ initialize "bootstrap" {
     }
   }
 
-  request "create-admin-policy" {
-    operation = "update"
-    path      = "sys/policies/acl/admin"
-
-    data = {
-      policy = <<EOT
-path "*" {
-  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
-}
-EOT
-    }
-  }
-
   request "create-admin-user" {
     operation = "update"
     path      = "auth/userpass/users/admin"
 
     data = {
       password = "replace-me_admin_password"
-      policies = ["admin"]
     }
   }
 }
