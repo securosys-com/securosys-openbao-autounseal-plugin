@@ -129,22 +129,22 @@ seal "securosys-hsm" {
 
   # Authorization type: TOKEN, CERT, or NONE.
   auth         = "TOKEN"
-  bearer_token = "replace-me_bearer_token"
+  bearer_token = "bearer-token"
 
   # For certificate authentication, use:
   # auth      = "CERT"
-  # cert_path = "replace-me_cert_path"
-  # key_path  = "replace-me_key_path"
+  # cert_path = "/path/to/client.crt"
+  # key_path  = "/path/to/client.key"
 
   # For unauthenticated test endpoints, use:
   # auth = "NONE"
 
   # Optional application key pair for metadata signatures.
-  # Provide privateKey and publicKey without PEM headers.
-  application_key_pair = "{\"privateKey\":\"replace-me_private_key_base64\",\"publicKey\":\"replace-me_public_key_base64\"}"
+  # Provide private_key and public_key without PEM headers.
+  application_key_pair = "{\"private_key\":\"...\",\"public_key\":\"...\"}"
 
   # Optional TSB API keys. Multiple keys can be provided per token type.
-  api_keys = "{\"KeyManagementToken\":[\"replace-me_key_management_token\"],\"KeyOperationToken\":[\"replace-me_key_operation_token\"],\"ServiceToken\":[\"replace-me_service_token\"]}"
+  api_keys = "{\"key_management_token\":[\"key-management-api-key\"],\"key_operation_token\":[\"key-operation-api-key\"],\"service_token\":[\"service-api-key\"]}"
 
   check_every      = 5
   approval_timeout = 600
@@ -155,11 +155,11 @@ Supported optional values include:
 
 - `cert_path` and `key_path` for `CERT` authentication.
 - `application_key_pair` for metadata signatures. The value is a JSON string
-  with `privateKey` and `publicKey`, without PEM headers.
+  with `private_key` and `public_key`, without PEM headers.
 - `api_keys` for TSB API-key authorization. The value is a JSON string. Common
-  token arrays are `KeyManagementToken`, `KeyOperationToken`, and
-  `ServiceToken`; approver flows can also use `ApproverToken` and
-  `ApproverKeyManagementToken`.
+  token arrays are `key_management_token`, `key_operation_token`, and
+  `service_token`; approver flows can also use `approver_token` and
+  `approver_key_management_token`.
 
 Auto-unseal timeout settings:
 
@@ -241,15 +241,16 @@ plugin "kms" "securosys-hsm" {
 seal "securosys-hsm" {
   key_label        = "replace-me_key_label"
   key_password     = "replace-me_key_password"
-  tsb_api_endpoint = "replace-me_tsb_api_endpoint"
+  tsb_api_endpoint = "https://tsb.example.com"
+  app_name         = "my-application"
 
   # Authorization type: TOKEN, CERT, or NONE.
   auth         = "TOKEN"
-  bearer_token = "replace-me_bearer_token"
-  # cert_path = "replace-me_cert_path"
-  # key_path  = "replace-me_key_path"
-  # application_key_pair = "{\"privateKey\":\"replace-me_private_key_base64\",\"publicKey\":\"replace-me_public_key_base64\"}"
-  # api_keys = "{\"KeyManagementToken\":[\"replace-me_key_management_token\"],\"KeyOperationToken\":[\"replace-me_key_operation_token\"],\"ServiceToken\":[\"replace-me_service_token\"]}"
+  bearer_token = "bearer-token"
+  # cert_path = "/path/to/client.crt"
+  # key_path  = "/path/to/client.key"
+  # application_key_pair = "{\"private_key\":\"...\",\"public_key\":\"...\"}"
+  # api_keys = "{\"key_management_token\":[\"key-management-api-key\"],\"key_operation_token\":[\"key-operation-api-key\"],\"service_token\":[\"service-api-key\"]}"
 
   check_every      = 5
   approval_timeout = 600
