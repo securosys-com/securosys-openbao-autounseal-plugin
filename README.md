@@ -12,10 +12,9 @@ and supports Securosys approval workflows for compliance-oriented deployments.
 
 - [Glossary](#glossary)
 - [Setup](#setup)
+- [Known limitations](#known-limitations)
 - [Build](#build)
 - [How to run OpenBao](#how-to-run-openbao)
-  - [Developer mode](#developer-mode)
-  - [Production mode](#production-mode)
   - [Auto-unseal with securosys-hsm](#auto-unseal-with-securosys-hsm)
   - [Self-initialization with HCL files](#self-initialization-with-hcl-files)
 - [Examples with three HCL files](#examples-with-three-hcl-files)
@@ -24,13 +23,13 @@ and supports Securosys approval workflows for compliance-oriented deployments.
 
 ## Glossary
 
-| Term      | Description                                                                  |
-| :-------- | :--------------------------------------------------------------------------- |
-| CloudsHSM | HSM as a service, operated by Securosys                                      |
-| HSM       | Hardware Security Module                                                     |
-| JWT       | JSON Web Token, used for bearer-token authorization                          |
-| TSB       | Transaction Security Broker, providing the REST interface to Securosys HSMs  |
-| UI        | OpenBao user interface                                                       |
+| Term      | Description                                                                 |
+| :-------- | :-------------------------------------------------------------------------- |
+| CloudsHSM | HSM as a service, operated by Securosys                                     |
+| HSM       | Hardware Security Module                                                    |
+| JWT       | JSON Web Token, used for bearer-token authorization                         |
+| TSB       | Transaction Security Broker, providing the REST interface to Securosys HSMs |
+| UI        | OpenBao user interface                                                      |
 
 ## Setup
 
@@ -40,8 +39,11 @@ The current `go.mod` uses local `replace` directives that point to the adjacent
 `../securosys-go-kms-wrapping` checkout, so it builds against your
 `feature/update-securosys-kms` wrapper branch.
 
-OpenBao must include KMS auto-unseal plugin support. Stock OpenBao v2.5.4
-rejects the `plugin "kms"` stanza with:
+OpenBao must include KMS auto-unseal plugin support. Use an OpenBao beta build
+with KMS plugin support, such as
+[OpenBao v2.6.0-beta20260622](https://github.com/openbao/openbao/releases/tag/v2.6.0-beta20260622),
+to run this plugin. Stock OpenBao v2.5.4 rejects the `plugin "kms"` stanza
+with:
 
 ```text
 "kms" is not a supported plugin type
@@ -49,6 +51,13 @@ rejects the `plugin "kms"` stanza with:
 
 For local testing in this workspace, build OpenBao from the adjacent
 `../securosys-openbao` checkout on `feature/using_securosyshsm_kms`.
+
+## Known limitations
+
+- OpenBao logs do not work yet with
+  [OpenBao v2.6.0-beta20260622](https://github.com/openbao/openbao/releases/tag/v2.6.0-beta20260622).
+  This is expected to be fixed in a newer OpenBao release.
+- This plugin currently supports non-SKA keys. SKA key support is expected to be fixed in a future OpenBao release.
 
 ## Build
 
@@ -59,8 +68,20 @@ go mod tidy
 go build -o openbao-plugin-securosyshsm .
 ```
 
+Calculate the SHA-256 checksum of the built plugin binary:
+
+```sh
+sha256sum openbao-plugin-securosyshsm
+```
+
+On macOS, use:
+
+```sh
+shasum -a 256 openbao-plugin-securosyshsm
+```
+
 Install the plugin into the directory configured by `plugin_directory` and
-calculate its SHA-256:
+verify the installed binary checksum:
 
 ```sh
 mkdir -p ./plugins
@@ -77,33 +98,6 @@ cd ../securosys-hsm-autounseal
 ```
 
 ## How to run OpenBao
-
-### Developer mode
-
-Developer mode is useful for quick OpenBao checks, but it stores all data in
-memory and initializes a fresh server on every start:
-
-```sh
-./bao-kms server -dev
-```
-
-For auto-unseal testing, use production-style configuration files instead of
-dev mode.
-
-### Production mode
-
-Run OpenBao with a configuration file or a configuration directory:
-
-```sh
-./bao-kms server -config=config/config.hcl
-```
-
-For auto-unseal and self-initialization, start OpenBao with the whole `config/`
-directory so all HCL files are loaded:
-
-```sh
-./bao-kms server -config=config
-```
 
 ### Auto-unseal with securosys-hsm
 
@@ -157,10 +151,10 @@ Supported optional values include:
 
 Auto-unseal timeout settings:
 
-| Parameter          | Example | Description                                                                 |
-| :----------------- | :------ | :-------------------------------------------------------------------------- |
-| `check_every`      | `5`     | How often OpenBao checks HSM approval status. Must be greater than `0`.     |
-| `approval_timeout` | `600`   | Maximum time to wait for HSM approval. Must be greater than `check_every`.  |
+| Parameter          | Example | Description                                                                |
+| :----------------- | :------ | :------------------------------------------------------------------------- |
+| `check_every`      | `5`     | How often OpenBao checks HSM approval status. Must be greater than `0`.    |
+| `approval_timeout` | `600`   | Maximum time to wait for HSM approval. Must be greater than `check_every`. |
 
 ### Self-initialization with HCL files
 
@@ -230,7 +224,7 @@ plugin_directory = "./plugins"
 
 plugin "kms" "securosys-hsm" {
   command   = "openbao-plugin-securosyshsm"
-  sha256sum = "700721592418e7ecbea2020c9ec1727c7ef9fd07d58c72395cc95bd783eca4a7"
+  sha256sum = "replace-me_sha256_filechecksum"
 }
 
 seal "securosys-hsm" {
