@@ -295,4 +295,4 @@ project issue tracker used for this repository.
 
 ## License
 
-This project follows the license terms declared by the repository.
+This project is licensed under the [Apache 2.0](./LICENSE) license.
