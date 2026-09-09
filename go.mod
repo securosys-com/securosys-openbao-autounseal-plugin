@@ -1,14 +1,14 @@
 module github.com/securosys-com/securosys-hsm-autounseal
 
-go 1.25.0
+go 1.25.12
 
-replace github.com/openbao/go-kms-wrapping/plugin/v2 => github.com/securosys-com/go-kms-wrapping/plugin/v2 v2.0.0-20260706151009-b77598feef53
+replace github.com/openbao/go-kms-wrapping/v2 => github.com/securosys-com/go-kms-wrapping/v2 v2.0.0-20260909100507-6f1b63b0df21
 
-replace github.com/openbao/go-kms-wrapping/v2 => github.com/securosys-com/go-kms-wrapping/v2 v2.0.0-20260706151009-b77598feef53
+replace github.com/openbao/go-kms-wrapping/wrappers/securosyshsm/v2 => github.com/securosys-com/go-kms-wrapping/wrappers/securosyshsm/v2 v2.0.0-20260909100507-6f1b63b0df21
 
-replace github.com/openbao/go-kms-wrapping/wrappers/securosyshsm/v2 => github.com/securosys-com/go-kms-wrapping/wrappers/securosyshsm/v2 v2.0.0-20260706151009-b77598feef53
+replace github.com/openbao/go-kms-wrapping/kms/securosyshsm/v2 => github.com/securosys-com/go-kms-wrapping/kms/securosyshsm/v2 v2.0.0-20260909100507-6f1b63b0df21
 
-replace github.com/openbao/go-kms-wrapping/kms/securosyshsm/v2 => github.com/securosys-com/go-kms-wrapping/kms/securosyshsm/v2 v2.0.0-20260706151009-b77598feef53
+replace github.com/openbao/go-kms-wrapping/plugin/v2 => github.com/securosys-com/go-kms-wrapping/plugin/v2 v2.0.0-20260909100507-6f1b63b0df21
 
 require (
 	github.com/openbao/go-kms-wrapping/plugin/v2 v2.0.0-00010101000000-000000000000
@@ -47,7 +47,7 @@ require (
 	github.com/openbao/go-kms-wrapping/kms/securosyshsm/v2 v2.0.0-00010101000000-000000000000 // indirect
 	github.com/posener/complete v1.1.1 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
-	github.com/securosys-com/tsb-client-go v1.0.1 // indirect
+	github.com/securosys-com/tsb-client-go v1.2.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	golang.org/x/crypto v0.47.0 // indirect

@@ -110,7 +110,13 @@ The plugin must be registered in the server configuration because OpenBao has
 to load the seal before storage is unsealed.
 
 The HSM key configured with `key_label` must already exist on the Securosys HSM
-or CloudsHSM instance before OpenBao starts.
+or CloudsHSM instance before OpenBao starts. Supported key types are RSA,
+ML-KEM-512, ML-KEM-768, and ML-KEM-1024.
+
+`health_check_enabled` must be set to **false** for the Securosys seal. OpenBao's
+seal health check periodically performs encryption and decryption operations.
+Enabling it can cause unnecessary HSM operations and may trigger approval
+workflows for policy-protected keys.
 
 Example:
 
@@ -123,6 +129,11 @@ plugin "kms" "securosys-hsm" {
 }
 
 seal "securosys-hsm" {
+  # Required: disable OpenBao's periodic seal encryption/decryption health check.
+  health_check_enabled = false
+
+  # Existing HSM key. Supported types: RSA, ML-KEM-512, ML-KEM-768,
+  # and ML-KEM-1024.
   key_label        = "replace-me_key_label"
   key_password     = "replace-me_key_password"
   tsb_api_endpoint = "replace-me_tsb_api_endpoint"
@@ -239,6 +250,11 @@ plugin "kms" "securosys-hsm" {
 }
 
 seal "securosys-hsm" {
+  # Required: disable OpenBao's periodic seal encryption/decryption health check.
+  health_check_enabled = false
+
+  # Existing HSM key. Supported types: RSA, ML-KEM-512, ML-KEM-768,
+  # and ML-KEM-1024.
   key_label        = "replace-me_key_label"
   key_password     = "replace-me_key_password"
   tsb_api_endpoint = "https://tsb.example.com"
