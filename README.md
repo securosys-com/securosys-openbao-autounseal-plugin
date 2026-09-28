@@ -1,9 +1,10 @@
 # Securosys HSM Auto-Unseal Plugin for OpenBao
 
-This project builds a standalone OpenBao KMS wrapper plugin for Securosys HSM
-auto-unseal. The plugin connects OpenBao to Securosys Primus HSM or CloudsHSM
-through the REST-based TSB interface and serves the `wrappers/securosyshsm`
-wrapper through `github.com/openbao/go-kms-wrapping/plugin/v2`.
+This project builds a standalone OpenBao KMS plugin for Securosys HSM
+auto-unseal and External Keys. The plugin connects OpenBao to Securosys Primus
+HSM or CloudsHSM through the REST-based TSB interface and serves both the
+`wrappers/securosyshsm` wrapper and the `kms/securosyshsm` implementation
+through `github.com/openbao/go-kms-wrapping/plugin/v2`.
 
 The integration lets OpenBao unlock its storage key with HSM-backed security.
 
@@ -32,30 +33,21 @@ The integration lets OpenBao unlock its storage key with HSM-backed security.
 
 ## Setup
 
-Install Go before building the plugin.
+Install Go 1.27 or newer before building the plugin.
 
-The current `go.mod` uses local `replace` directives that point to the adjacent
-`../securosys-go-kms-wrapping` checkout, so it builds against your
-`feature/update-securosys-kms` wrapper branch.
+The project uses the official `github.com/openbao/go-kms-wrapping` modules.
+Securosys wrapper and KMS support is included upstream.
 
-OpenBao must include KMS auto-unseal plugin support. Use an OpenBao beta build
-with KMS plugin support, such as
-[OpenBao v2.6.0-beta20260622](https://github.com/openbao/openbao/releases/tag/v2.6.0-beta20260622),
-to run this plugin. Stock OpenBao v2.5.4 rejects the `plugin "kms"` stanza
-with:
+Use [OpenBao v2.7.0](https://github.com/openbao/openbao/releases/tag/v2.7.0)
+or newer to run this plugin. Older OpenBao versions without KMS plugin support
+reject the `plugin "kms"` stanza with:
 
 ```text
 "kms" is not a supported plugin type
 ```
 
-For local testing in this workspace, build OpenBao from the adjacent
-`../securosys-openbao` checkout on `feature/using_securosyshsm_kms`.
-
 ## Known limitations
 
-- OpenBao logs do not work yet with
-  [OpenBao v2.6.0-beta20260622](https://github.com/openbao/openbao/releases/tag/v2.6.0-beta20260622).
-  This is expected to be fixed in a newer OpenBao release.
 - This plugin currently supports non-SKA keys. SKA key support is expected to be fixed in a future OpenBao release.
 
 ## Build
@@ -88,12 +80,13 @@ install -m 0755 openbao-plugin-securosyshsm ./plugins/openbao-plugin-securosyshs
 sha256sum ./plugins/openbao-plugin-securosyshsm
 ```
 
-Build the local OpenBao binary with KMS auto-unseal plugin support:
+Optionally, build OpenBao 2.7.0 from an adjacent source checkout:
 
 ```sh
-cd ../securosys-openbao
-go build -o ../securosys-hsm-autounseal/bao-kms .
-cd ../securosys-hsm-autounseal
+cd ../openbao
+git checkout v2.7.0
+go build -o ../securosys-openbao-autounseal-plugin/bao-kms .
+cd ../securosys-openbao-autounseal-plugin
 ```
 
 ## How to run OpenBao
@@ -125,7 +118,7 @@ plugin_directory = "./plugins"
 
 plugin "kms" "securosys-hsm" {
   command   = "openbao-plugin-securosyshsm"
-  sha256sum = "700721592418e7ecbea2020c9ec1727c7ef9fd07d58c72395cc95bd783eca4a7"
+  sha256sum = "ea516e46db1d7e10f8fe45b5199a7462163fcf10b4dee4d1500ae99ad574fddf"
 }
 
 seal "securosys-hsm" {
@@ -277,6 +270,19 @@ seal "securosys-hsm" {
 
 ```hcl
 initialize "bootstrap" {
+  request "create-admin-policy" {
+    operation = "update"
+    path      = "sys/policies/acl/admin"
+
+    data = {
+      policy = <<-EOT
+        path "*" {
+          capabilities = ["create", "read", "update", "patch", "delete", "list", "scan", "sudo"]
+        }
+      EOT
+    }
+  }
+
   request "enable-userpass" {
     operation = "update"
     path      = "sys/auth/userpass"
@@ -292,6 +298,7 @@ initialize "bootstrap" {
 
     data = {
       password = "replace-me_admin_password"
+      policies = ["admin"]
     }
   }
 }
